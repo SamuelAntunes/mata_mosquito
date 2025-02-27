@@ -1,61 +1,384 @@
 <!DOCTYPE html>
-<html>
-	<head>
-		<title></title>
-		<meta charset="UTF-8" />
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo do Mosquito - Projeto Final Responsivo com Modo Infinito</title>
+  <link rel="shortcut icon" href="imagens/favicon.ico" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Reset básico e box-sizing */
+    html {
+      cursor: url('imagens/mata_mosquito.png') 30 30, auto;
+      box-sizing: border-box;
+    }
+    *, *::before, *::after {
+      box-sizing: inherit;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: url('imagens/bg.jpg') no-repeat center center/cover;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      position: relative;
+    }
+    /* Animação para os mosquitos */
+    @keyframes aparecer {
+      from { transform: scale(0.8); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .mosquito {
+      animation: aparecer 0.3s ease-in-out;
+    }
+    /* Containers das telas */
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      padding: 20px;
+    }
+    .btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #c0392b;
+    }
+    /* Painel do jogo */
+    .painel {
+      position: absolute;
+      width: 190px;
+      padding: 10px;
+      left: 0;
+      bottom: 0;
+      border-top: solid 1px #fff;
+      background-color: rgba(255,255,255,0.7);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+    }
+    .vidas img {
+      width: 30px;
+      margin-right: 5px;
+    }
+    .info {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    /* Classes para os mosquitos */
+    .mosquito1 {
+      width: 50px;
+      height: 50px;
+    }
+    .mosquito2 {
+      width: 70px;
+      height: 70px;
+    }
+    .mosquito3 {
+      width: 90px;
+      height: 90px;
+    }
+    .ladoA {
+      transform: scaleX(1);
+    }
+    .ladoB {
+      transform: scaleX(-1);
+    }
+    /* Oculta as seções não ativas */
+    section {
+      display: none;
+    }
+    /* Tela ativa */
+    section.active {
+      display: block;
+    }
+    /* Responsividade para telas até 600px */
+    @media (max-width: 600px) {
+      .painel {
+        width: 100%;
+        padding: 5px;
+      }
+      .info {
+        font-size: 1rem;
+      }
+      .vidas img {
+        width: 25px;
+        margin-right: 3px;
+      }
+    }
+    /* Responsividade para telas até 400px */
+    @media (max-width: 400px) {
+      .mosquito1 {
+        width: 40px;
+        height: 40px;
+      }
+      .mosquito2 {
+        width: 60px;
+        height: 60px;
+      }
+      .mosquito3 {
+        width: 80px;
+        height: 80px;
+      }
+      .btn {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Tela de Início -->
+  <section id="start-screen" class="active">
+    <div class="container">
+      <img src="imagens/game.png" alt="Logo do Jogo">
+      <select id="nivel">
+        <option value="">-- Selecione o nível --</option>
+        <option value="normal">Normal</option>
+        <option value="dificil">Difícil</option>
+        <option value="chucknorris">Chuck Norris</option>
+        <option value="infinito">Infinito</option>
+      </select>
+      <button id="btn-iniciar" class="btn">Iniciar Jogo</button>
+    </div>
+  </section>
 
-		<link rel="stylesheet" href="estilo.css" />
+  <!-- Tela do Jogo -->
+  <section id="game-screen">
+    <div class="painel">
+      <div class="vidas">
+        <img id="v1" src="imagens/coracao_cheio.png" alt="Vida">
+        <img id="v2" src="imagens/coracao_cheio.png" alt="Vida">
+        <img id="v3" src="imagens/coracao_cheio.png" alt="Vida">
+      </div>
+      <!-- O conteúdo deste elemento será alterado dinamicamente -->
+      <div class="info" id="info-display">Tempo restante: <span id="info-value">15</span></div>
+    </div>
+  </section>
 
-		<script>
-			function iniciarJogo() {
-				var nivel = document.getElementById('nivel').value
+  <!-- Tela de Vitória -->
+  <section id="victory-screen">
+    <div class="container">
+      <img src="imagens/vitoria.png" alt="Vitória">
+      <button id="btn-restart-victory" class="btn">Reiniciar</button>
+    </div>
+  </section>
 
-				if(nivel === '') {
-					alert('Selecione um nível para iniciar o jogo')
-					return false
-				}
+  <!-- Tela de Game Over -->
+  <section id="gameover-screen">
+    <div class="container">
+      <img src="imagens/game_over.png" alt="Game Over">
+      <button id="btn-restart-gameover" class="btn">Reiniciar</button>
+    </div>
+  </section>
 
-				window.location.href = "app.html?" + nivel
+  <script>
+    (function() {
+      'use strict';
 
-			}
-		</script>
-	</head>
-	<body>
+      // Variáveis de controle do jogo
+      let altura = 0;
+      let largura = 0;
+      let vidas = 1;
+      let tempo = 15; // Usado apenas nos modos com limite de tempo
+      let pontos = 0;  // Usado no modo Infinito
+      let criaMosquitoTempo = 1500;
+      let cronometroInterval = null;
+      let mosquitoInterval = null;
+      let dificuldadeInterval = null;
+      let currentMode = ''; // Armazena o modo atual
 
-		<div class="container">
-			<div class="row">
-				<div class="col">
-					<div class="d-flex justify-content-center">
-						<img src="imagens/game.png" />
-					</div>
-				</div>
-			</div>
+      // Mapeamento dos níveis de dificuldade (exceto o modo Infinito)
+      const niveis = {
+        normal: 1500,
+        dificil: 1000,
+        chucknorris: 750
+      };
 
-			<div class="row">
-				<div class="col">
-					<div class="d-flex justify-content-center">
-						<div class="mb-2">
-							<select class="form-control" id="nivel">
-								<option value="">-- Selecione o nível --</option>
-								<option value="normal">Normal</option>
-								<option value="dificil">Difícil</option>
-								<option value="chucknorris">Chuck Norris</option>
-							</select>
-						</div>
-					</div>
-				</div>
-			</div>
+      // Seleção das seções (telas)
+      const startScreen = document.getElementById('start-screen');
+      const gameScreen = document.getElementById('game-screen');
+      const victoryScreen = document.getElementById('victory-screen');
+      const gameoverScreen = document.getElementById('gameover-screen');
 
+      const infoDisplay = document.getElementById('info-display');
+      // Alteramos para "let" para permitir reatribuição quando o innerHTML for modificado.
+      let infoValue = document.getElementById('info-value');
 
-			<div class="row">
-				<div class="col">
-					<div class="d-flex justify-content-center">
-						<button type="button" class="btn btn-danger btn-lg" onclick="iniciarJogo()" >Iniciar Jogo</button>
-					</div>
-				</div>
-			</div>
-		</div>
+      // Função para mostrar apenas a tela ativa
+      const showScreen = (screen) => {
+        [startScreen, gameScreen, victoryScreen, gameoverScreen].forEach(sec => sec.classList.remove('active'));
+        screen.classList.add('active');
+      };
 
-	</body>
+      // Ajusta as dimensões do palco do jogo
+      const ajustaTamanhoPalcoJogo = () => {
+        altura = window.innerHeight;
+        largura = window.innerWidth;
+        console.log("Dimensões:", largura, altura);
+      };
+      window.addEventListener('resize', ajustaTamanhoPalcoJogo);
+
+      // Função para reiniciar o intervalo de criação de mosquitos (modo Infinito)
+      const resetMosquitoInterval = () => {
+        clearInterval(mosquitoInterval);
+        mosquitoInterval = setInterval(posicaoRandomica, criaMosquitoTempo);
+      };
+
+      // Função para iniciar o jogo
+      const iniciarJogo = () => {
+        const nivelSelect = document.getElementById('nivel');
+        if (!nivelSelect) {
+          console.error('Elemento "nivel" não encontrado!');
+          return;
+        }
+        const nivel = nivelSelect.value;
+        if (!nivel) {
+          alert('Selecione um nível válido para iniciar o jogo');
+          return;
+        }
+        currentMode = nivel;
+        vidas = 1;
+        // Reinicia os indicadores de vida
+        for (let i = 1; i <= 3; i++) {
+          const vidaImg = document.getElementById('v' + i);
+          if (vidaImg) {
+            vidaImg.src = "imagens/coracao_cheio.png";
+          }
+        }
+
+        ajustaTamanhoPalcoJogo();
+        showScreen(gameScreen);
+
+        // Limpa quaisquer intervalos existentes
+        clearInterval(cronometroInterval);
+        clearInterval(mosquitoInterval);
+        clearInterval(dificuldadeInterval);
+
+        if (nivel === 'infinito') {
+          // Modo Infinito: sem limite de tempo, acumulando pontos
+          pontos = 0;
+          infoDisplay.innerHTML = 'Pontuação: <span id="info-value">' + pontos + '</span>';
+          // Atualiza a referência ao elemento de pontuação
+          infoValue = document.getElementById('info-value');
+          criaMosquitoTempo = 1500;
+          mosquitoInterval = setInterval(posicaoRandomica, criaMosquitoTempo);
+          // Aumenta a dificuldade a cada 10 segundos (reduzindo o tempo de criação)
+          dificuldadeInterval = setInterval(() => {
+            if (criaMosquitoTempo > 300) {
+              criaMosquitoTempo -= 100;
+              resetMosquitoInterval();
+            }
+          }, 10000);
+        } else {
+          // Modos com limite de tempo
+          if (niveis[nivel]) {
+            criaMosquitoTempo = niveis[nivel];
+          }
+          tempo = 15;
+          infoDisplay.innerHTML = 'Tempo restante: <span id="info-value">' + tempo + '</span>';
+          // Atualiza a referência ao elemento do cronômetro
+          infoValue = document.getElementById('info-value');
+          cronometroInterval = setInterval(() => {
+            tempo--;
+            if (tempo < 0) {
+              clearInterval(cronometroInterval);
+              clearInterval(mosquitoInterval);
+              showScreen(victoryScreen);
+            } else {
+              infoValue.textContent = tempo;
+            }
+          }, 1000);
+          mosquitoInterval = setInterval(posicaoRandomica, criaMosquitoTempo);
+        }
+      };
+
+      // Função para gerar posição aleatória e criar o mosquito,
+      // evitando a área ocupada pelo painel
+      const posicaoRandomica = () => {
+        const prevMosquito = document.getElementById('mosquito');
+        if (prevMosquito) {
+          prevMosquito.remove();
+          if (vidas >= 3) {
+            clearInterval(cronometroInterval);
+            clearInterval(mosquitoInterval);
+            clearInterval(dificuldadeInterval);
+            showScreen(gameoverScreen);
+            return;
+          } else {
+            const vidaImg = document.getElementById('v' + vidas);
+            if (vidaImg) {
+              vidaImg.src = "imagens/coracao_vazio.png";
+            }
+            vidas++;
+          }
+        }
+        // Calcula a área disponível para criação do mosquito, considerando o painel e uma margem para o tamanho máximo (90px)
+        const painel = document.querySelector('.painel');
+        const painelAltura = painel ? painel.offsetHeight : 0;
+        const maxX = largura - 90;
+        const maxY = Math.max(altura - painelAltura - 90, 0);
+        const posicaoX = Math.floor(Math.random() * maxX);
+        const posicaoY = Math.floor(Math.random() * maxY);
+
+        const mosquito = document.createElement('img');
+        mosquito.src = 'imagens/mosquito.png';
+        mosquito.className = 'mosquito ' + tamanhoAleatorio() + ' ' + ladoAleatorio();
+        mosquito.style.left = posicaoX + 'px';
+        mosquito.style.top = posicaoY + 'px';
+        mosquito.style.position = 'absolute';
+        mosquito.id = 'mosquito';
+        mosquito.style.cursor = 'pointer';
+        mosquito.addEventListener('click', () => {
+          mosquito.remove();
+          if (currentMode === 'infinito') {
+            pontos++;
+            infoValue.textContent = pontos;
+          }
+        });
+        document.body.appendChild(mosquito);
+      };
+
+      // Retorna uma classe aleatória para o tamanho do mosquito
+      const tamanhoAleatorio = () => {
+        const classes = ['mosquito1', 'mosquito2', 'mosquito3'];
+        return classes[Math.floor(Math.random() * classes.length)];
+      };
+
+      // Retorna uma classe aleatória para a orientação do mosquito
+      const ladoAleatorio = () => {
+        return Math.random() < 0.5 ? 'ladoA' : 'ladoB';
+      };
+
+      // Função para reiniciar o jogo
+      const reiniciarJogo = () => {
+        clearInterval(cronometroInterval);
+        clearInterval(mosquitoInterval);
+        clearInterval(dificuldadeInterval);
+        const mosquito = document.getElementById('mosquito');
+        if (mosquito) {
+          mosquito.remove();
+        }
+        showScreen(startScreen);
+      };
+
+      // Eventos de clique
+      document.getElementById('btn-iniciar').addEventListener('click', iniciarJogo);
+      document.getElementById('btn-restart-victory').addEventListener('click', reiniciarJogo);
+      document.getElementById('btn-restart-gameover').addEventListener('click', reiniciarJogo);
+
+      ajustaTamanhoPalcoJogo();
+    })();
+  </script>
+</body>
 </html>
